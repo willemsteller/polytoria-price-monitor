@@ -2,16 +2,19 @@ const request = require('request');
 const config = require('./config.json')
 const wh = require("webhook-discord")
 
-var page = 0;
-var priceStorage = new Array();
-var limit = 100;
-var init = true;
+let page = 0;
+let priceStorage = new Array();
+let limit = 100;
+let init = true;
 let interval = 1000;
+let fell = "fell";
+let storedItem; 
+
+
 
 const Webhook = new wh.Webhook(config.webhookUrl)
 
 function ValueChanged(Item, oldValue, newValue) {
-    var fell = "fell";
     var embedColor = "#d7c500"
     if (oldValue < newValue) {
         fell = "rose";
@@ -32,7 +35,6 @@ function ValueChanged(Item, oldValue, newValue) {
 }
 
 function PriceChanged(Item, oldPrice, newPrice) {
-    var fell = "fell";
     var embedColor = "#ff0000"
     if (oldPrice < newPrice) {
         fell = "rose"
@@ -55,8 +57,8 @@ function PriceChanged(Item, oldPrice, newPrice) {
     Webhook.send(msg);
 }
 
-function CheckForUpdates() {
-    request({
+async function CheckForUpdates() {
+    await request({
         url: `https://api.polytoria.com/asset/limiteds?limit=${limit}&page=${page}`,
         method: 'GET',
         headers: {
@@ -71,7 +73,7 @@ function CheckForUpdates() {
 
         body.forEach(Item => {
             if (Item.AssetID in priceStorage) {
-                var storedItem = priceStorage[Item.AssetID];
+                storedItem = priceStorage[Item.AssetID];
 
                 if (storedItem.Value != Item.Value) {
                     ValueChanged(Item, storedItem.Value, Item.Value);
