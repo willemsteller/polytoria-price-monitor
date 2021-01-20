@@ -1,4 +1,6 @@
 const request = require('request');
+const config = require('./config.json')
+const wh = require("webhook-discord")
 
 var page = 0;
 var priceStorage = new Array();
@@ -6,24 +8,51 @@ var limit = 100;
 var init = true;
 let interval = 1000;
 
+const Webhook = new wh.Webhook(config.webhookUrl)
+
 function ValueChanged(Item, oldValue, newValue) {
     var fell = "fell";
-    if (oldValue < newValue) fell = "rose";
-    console.log(`${Item.Name}: Sold, value ${fell} from ${oldValue} to ${newValue}`);
+    var embedColor = "#d7c500"
+    if (oldValue < newValue) {
+        fell = "rose";
+    }
+    var message = `Value ${fell} from ${oldValue} to ${newValue}`;
+    console.log(`${Item.Name}: ${message}`);
 
-    /* You can add other stuff here such as a Discord webhook */
+    const msg = new wh.MessageBuilder()
+                .setName("Price Monitor")
+                .setColor(embedColor)
+                .addField("Item sold", message)
+                .setThumbnail("https://polytoria.com/assets/thumbnails/catalog/" + Item.AssetID + ".png")
+                .addField("Best price", Item.BestPrice, true)
+                .setTitle(Item.Name)
+                .setURL("https://polytoria.com/shop/" + Item.AssetID);
+
+    Webhook.send(msg);
 }
 
 function PriceChanged(Item, oldPrice, newPrice) {
     var fell = "fell";
-    if (oldPrice < newPrice) fell = "rose";
-    if (newPrice > 0) {
-        console.log(`${Item.Name}: Price ${fell} from ${oldPrice} to ${newPrice}`);
-    } else {
-        console.log(`${Item.Name}: Price ${fell} from ${oldPrice} to off-sale`);
+    var embedColor = "#ff0000"
+    if (oldPrice < newPrice) {
+        fell = "rose"
+        embedColor = "#00ff00"
+    };
+    var message = `Price ${fell} from ${oldPrice} to ${newPrice}`;
+    if (newPrice <= 0) {
+        message = `Price ${fell} from ${oldPrice} to off-sale`;
     }
-    
-    /* You can add other stuff here such as a Discord webhook */
+
+    console.log(`${Item.Name}: ${message}`);
+    const msg = new wh.MessageBuilder()
+                .setName("Price Monitor")
+                .setColor(embedColor)
+                .addField("Price Changed", message)
+                .addField("Best price", Item.BestPrice, true)
+                .setThumbnail("https://polytoria.com/assets/thumbnails/catalog/" + Item.AssetID + ".png")
+                .setTitle(Item.Name)
+                .setURL("https://polytoria.com/shop/" + Item.AssetID);
+    Webhook.send(msg);
 }
 
 function CheckForUpdates() {
@@ -43,12 +72,10 @@ function CheckForUpdates() {
         body.forEach(Item => {
             if (Item.AssetID in priceStorage) {
                 var storedItem = priceStorage[Item.AssetID];
-                
+
                 if (storedItem.Value != Item.Value) {
                     ValueChanged(Item, storedItem.Value, Item.Value);
-                }
-
-                if (storedItem.BestPrice != Item.BestPrice) {
+                } else if (storedItem.BestPrice != Item.BestPrice) {
                     PriceChanged(Item, storedItem.BestPrice, Item.BestPrice);
                 }
 
@@ -66,13 +93,13 @@ function CheckForUpdates() {
                 console.log("Initialization complete.");
                 console.log("Monitoring market activity...");
             }
-                
+
 
             init = false;
         } else {
             page++;
         }
-        
+
         setTimeout(CheckForUpdates, interval)
     })
 }
