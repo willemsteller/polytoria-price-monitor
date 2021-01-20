@@ -1,25 +1,29 @@
 const request = require('request');
 const config = require('./config.json')
 const wh = require("webhook-discord")
-
-var page = 0;
-var priceStorage = new Array();
-var limit = 100;
-var init = true;
-let interval = 1000;
-
 const Webhook = new wh.Webhook(config.webhookUrl)
 
-function ValueChanged(Item, oldValue, newValue) {
-    var fell = "fell";
-    var embedColor = "#d7c500"
+let page = 0;
+let priceStorage = new Array();
+let limit = 100;
+let init = true;
+let interval = 1000;
+let img = config.picture
+let fell = 'fell'
+let message;
+
+
+async function ValueChanged(Item, oldValue, newValue) {
+     fell = "fell";
+     embedColor = "#d7c500"
     if (oldValue < newValue) {
         fell = "rose";
     }
-    var message = `Value ${fell} from ${oldValue} to ${newValue}`;
+    message = `Value ${fell} from ${oldValue} to ${newValue}`;
     console.log(`${Item.Name}: ${message}`);
 
     const msg = new wh.MessageBuilder()
+                .setAvatar(img)
                 .setName("Price Monitor")
                 .setColor(embedColor)
                 .addField("Item sold", message)
@@ -28,23 +32,24 @@ function ValueChanged(Item, oldValue, newValue) {
                 .setTitle(Item.Name)
                 .setURL("https://polytoria.com/shop/" + Item.AssetID);
 
-    Webhook.send(msg);
+    await Webhook.send(msg);
 }
 
-function PriceChanged(Item, oldPrice, newPrice) {
-    var fell = "fell";
-    var embedColor = "#ff0000"
+async function PriceChanged(Item, oldPrice, newPrice) {
+    fell = "fell";
+    embedColor = "#ff0000"
     if (oldPrice < newPrice) {
         fell = "rose"
         embedColor = "#00ff00"
     };
-    var message = `Price ${fell} from ${oldPrice} to ${newPrice}`;
+    message = `Price ${fell} from ${oldPrice} to ${newPrice}`;
     if (newPrice <= 0) {
         message = `Price ${fell} from ${oldPrice} to off-sale`;
     }
 
     console.log(`${Item.Name}: ${message}`);
-    const msg = new wh.MessageBuilder()
+    const msg =  new wh.MessageBuilder()
+                .setAvatar(img)
                 .setName("Price Monitor")
                 .setColor(embedColor)
                 .addField("Price Changed", message)
@@ -52,11 +57,11 @@ function PriceChanged(Item, oldPrice, newPrice) {
                 .setThumbnail("https://polytoria.com/assets/thumbnails/catalog/" + Item.AssetID + ".png")
                 .setTitle(Item.Name)
                 .setURL("https://polytoria.com/shop/" + Item.AssetID);
-    Webhook.send(msg);
+   await Webhook.send(msg);
 }
 
-function CheckForUpdates() {
-    request({
+async function CheckForUpdates() {
+    await request({
         url: `https://api.polytoria.com/asset/limiteds?limit=${limit}&page=${page}`,
         method: 'GET',
         headers: {
@@ -74,9 +79,9 @@ function CheckForUpdates() {
                 var storedItem = priceStorage[Item.AssetID];
 
                 if (storedItem.Value != Item.Value) {
-                    ValueChanged(Item, storedItem.Value, Item.Value);
+                    await ValueChanged(Item, storedItem.Value, Item.Value);
                 } else if (storedItem.BestPrice != Item.BestPrice) {
-                    PriceChanged(Item, storedItem.BestPrice, Item.BestPrice);
+                   await PriceChanged(Item, storedItem.BestPrice, Item.BestPrice);
                 }
 
                 priceStorage[Item.AssetID] = Item;
