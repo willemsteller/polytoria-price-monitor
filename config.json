@@ -1,4 +1,4 @@
 {
-    "picture": "Image for the webhook" // Image for profile picture.
-    "webhookUrl": "Your webhook URL" // URL for the webhook.
+    "picture": "Image for the webhook", 
+    "webhookUrl": "Your webhook URL" 
 }
