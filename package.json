@@ -1,0 +1,14 @@
+{
+  "name": "polytoria-price-monitor",
+  "version": "1.0.0",
+  "description": "Monitors market activity in the Polytoria catalog.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "willemsteller",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.88.2"
+  }
+}
