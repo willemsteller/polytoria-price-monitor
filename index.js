@@ -10,8 +10,6 @@ let interval = 1000;
 let fell = "fell";
 let storedItem; 
 
-
-
 const Webhook = new wh.Webhook(config.webhookUrl)
 
 function ValueChanged(Item, oldValue, newValue) {
@@ -28,6 +26,7 @@ function ValueChanged(Item, oldValue, newValue) {
                 .addField("Item sold", message)
                 .setThumbnail("https://polytoria.com/assets/thumbnails/catalog/" + Item.AssetID + ".png")
                 .addField("Best price", Item.BestPrice, true)
+                .addField("Value", Item.Value, true)
                 .setTitle(Item.Name)
                 .setURL("https://polytoria.com/shop/" + Item.AssetID);
 
@@ -51,6 +50,7 @@ function PriceChanged(Item, oldPrice, newPrice) {
                 .setColor(embedColor)
                 .addField("Price Changed", message)
                 .addField("Best price", Item.BestPrice, true)
+                .addField("Value", Item.Value, true)
                 .setThumbnail("https://polytoria.com/assets/thumbnails/catalog/" + Item.AssetID + ".png")
                 .setTitle(Item.Name)
                 .setURL("https://polytoria.com/shop/" + Item.AssetID);
@@ -69,37 +69,39 @@ async function CheckForUpdates() {
             return console.error("An error occured! " + err);
         }
 
-        body = JSON.parse(body);
+        try {
+            body = JSON.parse(body);
 
-        body.forEach(Item => {
-            if (Item.AssetID in priceStorage) {
-                storedItem = priceStorage[Item.AssetID];
+            body.forEach(Item => {
+                if (Item.AssetID in priceStorage) {
+                    storedItem = priceStorage[Item.AssetID];
 
-                if (storedItem.Value != Item.Value) {
-                    ValueChanged(Item, storedItem.Value, Item.Value);
-                } else if (storedItem.BestPrice != Item.BestPrice) {
-                    PriceChanged(Item, storedItem.BestPrice, Item.BestPrice);
+                    if (storedItem.Value != Item.Value) {
+                        ValueChanged(Item, storedItem.Value, Item.Value);
+                    } else if (storedItem.BestPrice != Item.BestPrice) {
+                        PriceChanged(Item, storedItem.BestPrice, Item.BestPrice);
+                    }
+
+                    priceStorage[Item.AssetID] = Item;
+                } else {
+                    priceStorage[Item.AssetID] = Item;
+                    if (!init)
+                        console.log("Item added to storage: " + Item.Name);
                 }
+            });
 
-                priceStorage[Item.AssetID] = Item;
+            if (body.length == 0) {
+                page = 0;
+                if (init) {
+                    console.log("Initialization complete.");
+                    console.log("Monitoring market activity...");
+                }
+                init = false;
             } else {
-                priceStorage[Item.AssetID] = Item;
-                if (!init)
-                    console.log("Item added to storage: " + Item.Name);
+                page++;
             }
-        });
-
-        if (body.length == 0) {
-            page = 0;
-            if (init) {
-                console.log("Initialization complete.");
-                console.log("Monitoring market activity...");
-            }
-
-
-            init = false;
-        } else {
-            page++;
+        } catch (e) {
+            console.warn(e);
         }
 
         setTimeout(CheckForUpdates, interval)
