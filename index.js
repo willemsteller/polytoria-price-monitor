@@ -7,13 +7,13 @@ let priceStorage = new Array();
 let limit = 100;
 let init = true;
 let interval = 1000;
-let fell = "fell";
 let storedItem; 
 
 const Webhook = new wh.Webhook(config.webhookUrl)
 
 function ValueChanged(Item, oldValue, newValue) {
     var embedColor = "#d7c500"
+    let fell = "fell";
     if (oldValue < newValue) {
         fell = "rose";
     }
@@ -35,6 +35,7 @@ function ValueChanged(Item, oldValue, newValue) {
 
 function PriceChanged(Item, oldPrice, newPrice) {
     var embedColor = "#ff0000"
+    let fell = "fell";
     if (oldPrice < newPrice) {
         fell = "rose"
         embedColor = "#00ff00"
@@ -59,7 +60,7 @@ function PriceChanged(Item, oldPrice, newPrice) {
 
 async function CheckForUpdates() {
     await request({
-        url: `https://api.polytoria.com/asset/limiteds?limit=${limit}&page=${page}`,
+        url: `https://api.polytoria.com/v1/asset/limiteds?limit=${limit}&page=${page}`,
         method: 'GET',
         headers: {
             'Accept-Charset': 'utf-8'
