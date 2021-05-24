@@ -1,39 +1,36 @@
-const request = require('request');
+const request = require('request'); // TODO: deprecate request and use node-fetch instead. 
 const config = require('./config.json')
 const wh = require("webhook-discord")
 
 let page = 0;
-let priceStorage = new Array();
-let limit = 100;
-let init = true;
-let interval = 1000;
+let priceStorage = [];
+const limit = 100;
+const init = true;
+const interval = 1000;
 let storedItem; 
-
+let message = "";
 const Webhook = new wh.Webhook(config.webhookUrl)
 
-function ValueChanged(Item, oldValue, newValue) {
+async function ValueChanged(Item, oldValue, newValue) {
     var embedColor = "#d7c500"
     let fell = "fell";
     if (oldValue < newValue) {
         fell = "rose";
     }
-    var message = `Value ${fell} from ${oldValue} to ${newValue}`;
-    console.log(`${Item.Name}: ${message}`);
-
     const msg = new wh.MessageBuilder()
                 .setName("Price Monitor")
                 .setColor(embedColor)
-                .addField("Item sold", message)
+                .addField("Item sold", `Value ${fell} from ${oldValue} to ${newValue}`)
                 .setThumbnail("https://polytoria.com/assets/thumbnails/catalog/" + Item.AssetID + ".png")
                 .addField("Best price", Item.BestPrice, true)
                 .addField("Value", Item.Value, true)
                 .setTitle(Item.Name)
                 .setURL("https://polytoria.com/shop/" + Item.AssetID);
 
-    Webhook.send(msg);
+    await Webhook.send(msg);
 }
 
-function PriceChanged(Item, oldPrice, newPrice) {
+async function PriceChanged(Item, oldPrice, newPrice) {
     var embedColor = "#ff0000"
     let fell = "fell";
     if (oldPrice < newPrice) {
@@ -55,7 +52,7 @@ function PriceChanged(Item, oldPrice, newPrice) {
                 .setThumbnail("https://polytoria.com/assets/thumbnails/catalog/" + Item.AssetID + ".png")
                 .setTitle(Item.Name)
                 .setURL("https://polytoria.com/shop/" + Item.AssetID);
-    Webhook.send(msg);
+    await Webhook.send(msg);
 }
 
 async function CheckForUpdates() {
@@ -71,12 +68,15 @@ async function CheckForUpdates() {
         }
 
         try {
-            body = JSON.parse(body);
-
+            body = JSON.parse(body); // We need to actually dot hings correctly. Maybe use .then, it just looks better.
+            // This is messy, and not explained.
+            // From what i see (Carlos) I'd say that this function basically stores item data on an array to check for future updates.
             body.forEach(Item => {
-                if (Item.AssetID in priceStorage) {
+                id = Item.assetID;
+            
+                if (Item.AssetID in priceStorage) { 
                     storedItem = priceStorage[Item.AssetID];
-
+                    
                     if (storedItem.Value != Item.Value) {
                         ValueChanged(Item, storedItem.Value, Item.Value);
                     } else if (storedItem.BestPrice != Item.BestPrice) {
@@ -111,3 +111,7 @@ async function CheckForUpdates() {
 
 console.log("Started initialization...");
 setTimeout(CheckForUpdates, interval)
+
+
+// Overall messy code, I'll try rewriting it
+// - Carlos
