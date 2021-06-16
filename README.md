@@ -1,4 +1,4 @@
-# polytoria-price-monitor
+# Price Monitor
  Monitors market activity in the Polytoria catalog.
 
 ### Setting up
