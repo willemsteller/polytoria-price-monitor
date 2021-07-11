@@ -9,7 +9,7 @@
   "author": "willemsteller",
   "license": "ISC",
   "dependencies": {
-    "request": "^2.88.2",
+    "axios": "^0.21.1",
     "webhook-discord": "^3.7.7"
   }
 }
