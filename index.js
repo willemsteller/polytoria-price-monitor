@@ -39,9 +39,9 @@ async function ValueChanged(Item, oldValue, newValue) {
 async function PriceChanged(Item, oldPrice, newPrice) {
     var rose = (oldPrice < newPrice);
 
-    var embedColor = (rose == true) ? "#00ff00" : "#ff0000"
+    var embedColor = rose ? "#00ff00" : "#ff0000"
     
-    let fell = (rose == true) ? "rose" : "fell";
+    let fell = rose ? "rose" : "fell";
 
     var message = `Price ${fell} from ${oldPrice} to ${newPrice}`;
 
